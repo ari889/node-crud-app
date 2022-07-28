@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotEnv = require('dotenv');
 const todoHandler = require('./routeHandler/todoHandler');
+const userHandler = require('./routeHandler/userHandler');
 
 /**
  * configure app
@@ -21,6 +22,11 @@ mongoose.connect('mongodb://localhost/node-crud')
  * todo handler
  */
 app.use('/todo', todoHandler);
+
+/**
+ * user handler
+ */
+app.use('/user', userHandler)
 
 
 /**
