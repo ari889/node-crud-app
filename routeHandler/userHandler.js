@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const userSchema = require('../schema/userSchema');
 const User = new mongoose.model('User', userSchema);
+const checkLogin = require('../middlewares/checkLogin');
 
 router.post('/signup', async (req, res) => {
     try {
@@ -62,6 +63,24 @@ router.post('/login', async (req, res) => {
         res.status(500).json({
             error: "There was a server side error"
         });
+    }
+});
+
+/**
+ * get all user
+ */
+router.get('/all', checkLogin, async (req, res) => {
+    try {
+        const users = await User.find()
+            .populate('todos');
+        res.status(200).json({
+            data: users,
+            message: "Success!"
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "There was a server error!"
+        })
     }
 });
 

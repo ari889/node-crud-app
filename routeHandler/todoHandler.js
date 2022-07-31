@@ -3,10 +3,12 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const todoSchema = require('../schema/todoSchema');
 const checkLogin = require('../middlewares/checkLogin');
+const userSchema = require('../schema/userSchema');
 /**
  * create todo model
  */
 const Todo = new mongoose.model("Todo", todoSchema);
+const User = new mongoose.model("User", userSchema);
 
 /**
  * get all todos
@@ -17,6 +19,7 @@ router.get('/', checkLogin, (req, res) => {
         __v: 0,
         date: 0
     })
+        .populate('user')
         .exec((err, data) => {
             if (err) {
                 res.status(500).json({
@@ -33,10 +36,20 @@ router.get('/', checkLogin, (req, res) => {
 /**
  * add todo
  */
-router.post('/', async (req, res) => {
-    const newTodo = Todo(req.body);
+router.post('/', checkLogin, async (req, res) => {
+    const newTodo = new Todo({
+        ...req.body,
+        user: req.userId
+    });
     try {
-        await newTodo.save();
+        const todo = await newTodo.save();
+        await User.updateOne({
+            _id: req.userId
+        }, {
+            $push: {
+                todos: todo._id
+            }
+        });
         res.status(200).json({
             message: "Todo inserted successfully!"
         });
@@ -50,7 +63,7 @@ router.post('/', async (req, res) => {
 /**
  * update todos
  */
-router.put('/:id', (req, res) => {
+router.put('/:id', checkLogin, (req, res) => {
     Todo.findByIdAndUpdate({ _id: req.params.id }, {
         $set: {
             ...req.body
@@ -74,7 +87,7 @@ router.put('/:id', (req, res) => {
 /**
  * update todos
  */
-router.delete('/:id', (req, res) => {
+router.delete('/:id', checkLogin, (req, res) => {
     Todo.deleteOne({ _id: req.params.id }, (err) => {
         if (err) {
             res.status(500).json({
